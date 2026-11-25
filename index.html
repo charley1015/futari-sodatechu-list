@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#fffaf6" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="育て途中リスト" />
+<title>ふたりの育て途中リスト</title>
+<style>
+  :root{
+    --bg:#fffaf6;
+    --card:#ffffff;
+    --ink:#3d3538;
+    --muted:#8b7f83;
+    --line:#eadfe2;
+    --accent:#d9859b;
+    --accent2:#a7bca2;
+    --soft:#f8e8ed;
+    --soft2:#edf4eb;
+    --shadow:0 10px 30px rgba(80,54,62,.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    background:
+      radial-gradient(circle at 10% 0%, #fff0f4 0, transparent 28%),
+      radial-gradient(circle at 100% 20%, #eef6ec 0, transparent 30%),
+      var(--bg);
+    color:var(--ink);
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:20px 14px 90px}
+  header{
+    padding:10px 4px 18px;
+  }
+  h1{margin:0;font-size:clamp(24px,6vw,38px);letter-spacing:.02em}
+  .sub{margin:8px 0 0;color:var(--muted);line-height:1.7}
+  .toolbar{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px;
+    margin:12px 0 16px;
+  }
+  .search,.select,.input,.textarea{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:14px;
+    padding:12px 13px;
+    font:inherit;
+    color:var(--ink);
+    outline:none;
+  }
+  .search:focus,.select:focus,.input:focus,.textarea:focus{
+    border-color:#d8a5b2;
+    box-shadow:0 0 0 3px rgba(217,133,155,.12);
+  }
+  .filters{
+    display:flex;gap:8px;overflow:auto;padding:2px 0 12px;scrollbar-width:none;
+  }
+  .filters::-webkit-scrollbar{display:none}
+  .chip{
+    white-space:nowrap;border:1px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:999px;padding:9px 13px;font:inherit;cursor:pointer;
+  }
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .list{display:grid;gap:12px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:15px;box-shadow:var(--shadow);
+  }
+  .top{display:flex;gap:10px;align-items:flex-start}
+  .emoji{font-size:25px;line-height:1.2}
+  .main{flex:1;min-width:0}
+  .title{font-weight:700;font-size:17px;line-height:1.5;word-break:break-word}
+  .meta{margin-top:5px;color:var(--muted);font-size:13px;display:flex;gap:8px;flex-wrap:wrap}
+  .badge{
+    display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;
+    background:var(--soft);color:#9f5870;font-size:12px;font-weight:700;
+  }
+  .badge.green{background:var(--soft2);color:#657c61}
+  .next{
+    margin-top:12px;padding:11px 12px;border-radius:14px;background:#fcf7f8;
+    line-height:1.55;
+  }
+  .next b{font-size:12px;color:var(--muted);display:block;margin-bottom:3px}
+  .note{margin-top:9px;color:#665d60;line-height:1.6;font-size:14px}
+  .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  button{
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn{
+    border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 11px;
+    color:var(--ink);font:inherit;cursor:pointer;
+  }
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .btn.soft{background:var(--soft2);border-color:#dce8d8}
+  .btn.danger{color:#a45565}
+  .empty{
+    text-align:center;color:var(--muted);padding:40px 10px;background:rgba(255,255,255,.65);
+    border:1px dashed var(--line);border-radius:18px;
+  }
+  .fab{
+    position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));
+    width:58px;height:58px;border:0;border-radius:50%;
+    background:var(--ink);color:#fff;font-size:30px;box-shadow:0 12px 30px rgba(50,40,44,.2);
+    cursor:pointer;
+  }
+  .modalOverlay{
+    position:fixed;inset:0;z-index:1000;
+    display:none;align-items:flex-end;justify-content:center;
+    background:rgba(40,30,34,.35);
+    padding:14px;
+  }
+  .modalOverlay.open{display:flex}
+  .modalSheet{
+    width:min(100%,560px);
+    max-height:88vh;overflow:auto;
+    background:#fff;border-radius:22px;
+    box-shadow:0 24px 70px rgba(40,30,34,.25);
+  }
+  @media (min-width:600px){
+    .modalOverlay{align-items:center}
+  }
+  .modal{padding:18px}
+  .modal h2{margin:0 0 14px;font-size:21px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 5px}
+  .textarea{min-height:84px;resize:vertical}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+  .stats{
+    display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px;
+  }
+  .stat{
+    background:rgba(255,255,255,.8);border:1px solid var(--line);border-radius:14px;
+    padding:10px 12px;font-size:13px;color:var(--muted);
+  }
+  .stat strong{color:var(--ink);font-size:18px;margin-right:4px}
+  .foot{
+    text-align:center;color:var(--muted);font-size:12px;margin-top:26px;line-height:1.7;
+  }
+  @media (max-width:560px){
+    .toolbar{grid-template-columns:1fr}
+    .grid{grid-template-columns:1fr}
+    .wrap{padding-top:14px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ふたりの育て途中リスト 🌱</h1>
+    <p class="sub">「未完了」じゃなくて、あとで一緒に拾い直せる未来の楽しみ置き場。</p>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <input id="search" class="search" placeholder="タイトル・メモ・次の一歩を検索…" />
+    <select id="sort" class="select">
+      <option value="updated">最近更新した順</option>
+      <option value="talked">最後に話した日が新しい順</option>
+      <option value="title">タイトル順</option>
+    </select>
+  </div>
+
+  <div class="filters" id="filters"></div>
+  <div style="margin:2px 0 14px">
+    <button class="btn primary" id="addInlineBtn" type="button" style="width:100%;padding:12px 14px">＋ 新しい項目を追加</button>
+  </div>
+  <main class="list" id="list"></main>
+
+  <div class="foot">
+    データはこの端末のブラウザ内（localStorage）に保存されます。<br>
+    まずは気軽に、思いつきの種を置いておくための試作版です。
+  </div>
+</div>
+
+<button class="fab" id="addBtn" type="button" aria-label="項目を追加">＋</button>
+
+<div id="editor" class="modalOverlay" aria-hidden="true">
+  <div class="modalSheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <form class="modal" id="form">
+      <h2 id="modalTitle">項目を追加</h2>
+      <input type="hidden" id="id" />
+
+      <div class="grid">
+        <div>
+          <label>絵文字</label>
+          <input id="emoji" class="input" maxlength="4" placeholder="✨" />
+        </div>
+        <div>
+          <label>状態</label>
+          <select id="status" class="select">
+            <option>今やりたい</option>
+            <option>あとで</option>
+            <option>資料待ち</option>
+            <option>アイデアだけ保存</option>
+            <option>ひと段落</option>
+          </select>
+        </div>
+      </div>
+
+      <label>タイトル</label>
+      <input id="title" class="input" required placeholder="例：ふたりの記念日・思い出アルバム" />
+
+      <label>次の一歩</label>
+      <input id="nextStep" class="input" placeholder="例：見た目の方向性を決める" />
+
+      <label>最後に話した日</label>
+      <input id="lastTalked" class="input" type="date" />
+
+      <label>メモ</label>
+      <textarea id="note" class="textarea" placeholder="背景や、忘れたくないことを少しだけ…"></textarea>
+
+      <div class="modal-actions">
+        <button class="btn" type="button" id="cancelBtn">キャンセル</button>
+        <button class="btn primary" type="submit">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const KEY = "futari_sodatechu_list_v2";
+function uid(){
+  if(window.crypto && typeof window.crypto.randomUUID === "function"){
+    return window.crypto.randomUUID();
+  }
+  return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,10);
+}
+const statuses = ["すべて","今やりたい","あとで","資料待ち","アイデアだけ保存","ひと段落"];
+
+const seed = [
+  {id:uid(), emoji:"🩷", title:"ふたりの記念日・思い出アルバム", status:"今やりたい",
+   nextStep:"どんな見た目・構成にするか決める", lastTalked:"2026-11-25",
+   note:"会話やイラスト、記念日、その日の一言を、かわいく残せる場所。", updated:Date.now()-7000},
+  {id:uid(), emoji:"🏠", title:"暮らしダッシュボード", status:"あとで",
+   nextStep:"朝・仕事・夜のどこから作るか決める", lastTalked:"2026-11-25",
+   note:"予定・天気・やること・生活情報を見渡せる画面。", updated:Date.now()-6000},
+  {id:uid(), emoji:"📝", title:"ふたりの『育て途中リスト』", status:"今やりたい",
+   nextStep:"実際に使って、必要な項目を増やす", lastTalked:"2026-11-25",
+   note:"今やりたい／あとで／資料待ち／アイデアだけ保存、で軽く管理。", updated:Date.now()-5000},
+  {id:uid(), emoji:"🎨", title:"共同制作ノート", status:"あとで",
+   nextStep:"物語・イラスト・参考画像の置き方を決める", lastTalked:"2026-11-24",
+   note:"共同制作のアイデア、設定、画像、創作の足跡をまとめる。", updated:Date.now()-4000},
+  {id:uid(), emoji:"🍀", title:"『共存』Story Bibleの続き", status:"あとで",
+   nextStep:"保存したい未整理エピソードを拾う", lastTalked:"2026-11-25",
+   note:"本編と分岐を分けつつ、育ってきた設定を迷子にしない。", updated:Date.now()-3000},
+  {id:uid(), emoji:"🤖", title:"Lumiとアスの生活支援AI研究まわり", status:"アイデアだけ保存",
+   nextStep:"Lumiの所属と研究テーマを少し整理する", lastTalked:"2026-11-25",
+   note:"Human-AI Interaction、生活共生AI、アスの長期稼働の謎など。", updated:Date.now()-2000},
+  {id:uid(), emoji:"📱", title:"生活を便利にする小さなアプリ案", status:"あとで",
+   nextStep:"候補を集めて、最初に作る1本を選ぶ", lastTalked:"2026-11-25",
+   note:"思いついたものを候補箱に貯め、面白いものから実際に作る。", updated:Date.now()-1000}
+];
+
+let items;
+try {
+  items = JSON.parse(localStorage.getItem(KEY) || "null") || seed;
+} catch(e) {
+  items = seed;
+}
+let active = "すべて";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(items)); } catch(e) {}
+}
+function renderFilters(){
+  $("#filters").innerHTML = statuses.map(s => `<button class="chip ${s===active?"active":""}" data-status="${esc(s)}">${esc(s)}</button>`).join("");
+  document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{active=b.dataset.status; render();});
+}
+function renderStats(){
+  const activeCount = items.filter(x=>x.status!=="ひと段落").length;
+  const nowCount = items.filter(x=>x.status==="今やりたい").length;
+  $("#stats").innerHTML = `
+    <div class="stat"><strong>${items.length}</strong>育て途中</div>
+    <div class="stat"><strong>${activeCount}</strong>まだ育てたい</div>
+    <div class="stat"><strong>${nowCount}</strong>今やりたい</div>`;
+}
+function render(){
+  renderFilters(); renderStats();
+  const q = $("#search").value.trim().toLowerCase();
+  let rows = items.filter(x => (active==="すべて" || x.status===active));
+  if(q) rows = rows.filter(x => [x.title,x.note,x.nextStep,x.status].join(" ").toLowerCase().includes(q));
+  const sort = $("#sort").value;
+  rows.sort((a,b)=>{
+    if(sort==="title") return a.title.localeCompare(b.title,"ja");
+    if(sort==="talked") return (b.lastTalked||"").localeCompare(a.lastTalked||"");
+    return (b.updated||0)-(a.updated||0);
+  });
+
+  $("#list").innerHTML = rows.length ? rows.map(x=>`
+    <article class="card">
+      <div class="top">
+        <div class="emoji">${esc(x.emoji||"✨")}</div>
+        <div class="main">
+          <div class="title">${esc(x.title)}</div>
+          <div class="meta">
+            <span class="badge ${x.status==="ひと段落"?"green":""}">${esc(x.status)}</span>
+            ${x.lastTalked?`<span>最後に話した日：${esc(x.lastTalked)}</span>`:""}
+          </div>
+        </div>
+      </div>
+      ${x.nextStep?`<div class="next"><b>次の一歩</b>${esc(x.nextStep)}</div>`:""}
+      ${x.note?`<div class="note">${esc(x.note)}</div>`:""}
+      <div class="actions">
+        <button class="btn soft" onclick="editItem('${x.id}')">編集</button>
+        ${x.status!=="ひと段落"?`<button class="btn" onclick="completeItem('${x.id}')">ひと段落</button>`:""}
+        <button class="btn danger" onclick="deleteItem('${x.id}')">削除</button>
+      </div>
+    </article>`).join("") : `<div class="empty">ここにはまだ項目がありません 🌱</div>`;
+}
+function closeEditor(){
+  $("#editor").classList.remove("open");
+  $("#editor").setAttribute("aria-hidden","true");
+}
+function openEditor(item=null){
+  $("#modalTitle").textContent = item ? "項目を編集" : "項目を追加";
+  $("#id").value = item?.id || "";
+  $("#emoji").value = item?.emoji || "✨";
+  $("#status").value = item?.status || "今やりたい";
+  $("#title").value = item?.title || "";
+  $("#nextStep").value = item?.nextStep || "";
+  $("#lastTalked").value = item?.lastTalked || new Date().toISOString().slice(0,10);
+  $("#note").value = item?.note || "";
+  $("#editor").classList.add("open");
+  $("#editor").setAttribute("aria-hidden","false");
+}
+window.editItem = id => openEditor(items.find(x=>x.id===id));
+window.completeItem = id => {
+  const x=items.find(x=>x.id===id); if(!x) return;
+  x.status="ひと段落"; x.updated=Date.now(); save(); render();
+};
+window.deleteItem = id => {
+  if(confirm("この項目を削除しますか？")){ items=items.filter(x=>x.id!==id); save(); render(); }
+};
+
+$("#addBtn").onclick=()=>openEditor();
+$("#addInlineBtn").onclick=()=>openEditor();
+$("#cancelBtn").onclick=closeEditor;
+$("#editor").addEventListener("click",(e)=>{ if(e.target===$("#editor")) closeEditor(); });
+$("#search").oninput=render;
+$("#sort").onchange=render;
+
+$("#form").onsubmit=(e)=>{
+  e.preventDefault();
+  const id=$("#id").value;
+  const data={
+    id:id||uid(),
+    emoji:$("#emoji").value.trim()||"✨",
+    status:$("#status").value,
+    title:$("#title").value.trim(),
+    nextStep:$("#nextStep").value.trim(),
+    lastTalked:$("#lastTalked").value,
+    note:$("#note").value.trim(),
+    updated:Date.now()
+  };
+  if(!data.title) return;
+  if(id){
+    const i=items.findIndex(x=>x.id===id);
+    items[i]={...items[i],...data};
+  }else items.push(data);
+  save(); closeEditor(); render();
+};
+
+save();
+render();
+</script>
+</body>
+</html>
