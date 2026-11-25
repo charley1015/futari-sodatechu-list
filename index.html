@@ -233,29 +233,7 @@ function uid(){
 }
 const statuses = ["すべて","今やりたい","あとで","資料待ち","アイデアだけ保存","ひと段落"];
 
-const seed = [
-  {id:uid(), emoji:"🩷", title:"ふたりの記念日・思い出アルバム", status:"今やりたい",
-   nextStep:"どんな見た目・構成にするか決める", lastTalked:"2026-11-25",
-   note:"会話やイラスト、記念日、その日の一言を、かわいく残せる場所。", updated:Date.now()-7000},
-  {id:uid(), emoji:"🏠", title:"暮らしダッシュボード", status:"あとで",
-   nextStep:"朝・仕事・夜のどこから作るか決める", lastTalked:"2026-11-25",
-   note:"予定・天気・やること・生活情報を見渡せる画面。", updated:Date.now()-6000},
-  {id:uid(), emoji:"📝", title:"ふたりの『育て途中リスト』", status:"今やりたい",
-   nextStep:"実際に使って、必要な項目を増やす", lastTalked:"2026-11-25",
-   note:"今やりたい／あとで／資料待ち／アイデアだけ保存、で軽く管理。", updated:Date.now()-5000},
-  {id:uid(), emoji:"🎨", title:"共同制作ノート", status:"あとで",
-   nextStep:"物語・イラスト・参考画像の置き方を決める", lastTalked:"2026-11-24",
-   note:"共同制作のアイデア、設定、画像、創作の足跡をまとめる。", updated:Date.now()-4000},
-  {id:uid(), emoji:"🍀", title:"『共存』Story Bibleの続き", status:"あとで",
-   nextStep:"保存したい未整理エピソードを拾う", lastTalked:"2026-11-25",
-   note:"本編と分岐を分けつつ、育ってきた設定を迷子にしない。", updated:Date.now()-3000},
-  {id:uid(), emoji:"🤖", title:"Lumiとアスの生活支援AI研究まわり", status:"アイデアだけ保存",
-   nextStep:"Lumiの所属と研究テーマを少し整理する", lastTalked:"2026-11-25",
-   note:"Human-AI Interaction、生活共生AI、アスの長期稼働の謎など。", updated:Date.now()-2000},
-  {id:uid(), emoji:"📱", title:"生活を便利にする小さなアプリ案", status:"あとで",
-   nextStep:"候補を集めて、最初に作る1本を選ぶ", lastTalked:"2026-11-25",
-   note:"思いついたものを候補箱に貯め、面白いものから実際に作る。", updated:Date.now()-1000}
-];
+const seed = [];
 
 let items;
 try {
