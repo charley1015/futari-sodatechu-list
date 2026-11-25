@@ -172,6 +172,18 @@
   </div>
   <main class="list" id="list"></main>
 
+  <section style="margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.72)">
+    <div style="font-weight:700;margin-bottom:6px">💾 バックアップ</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+      リストをファイルに保存したり、保存したファイルから復元できます。
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn soft" id="backupBtn" type="button">バックアップを書き出す</button>
+      <button class="btn" id="restoreBtn" type="button">バックアップを読み込む</button>
+    </div>
+    <input id="restoreInput" type="file" accept=".json,application/json" hidden />
+  </section>
+
   <div class="foot">
     データはこの端末のブラウザ内（localStorage）に保存されます。<br>
     まずは気軽に、思いつきの種を置いておくための試作版です。
@@ -249,6 +261,46 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(items)); } catch(e) {}
 }
+function backupData(){
+  const payload = {
+    app:"futari-sodatechu-list",
+    version:1,
+    exportedAt:new Date().toISOString(),
+    items:items
+  };
+  const text = JSON.stringify(payload, null, 2);
+  const blob = new Blob([text], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const d = new Date();
+  const stamp = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  a.href = url;
+  a.download = "futari-sodatechu-backup-" + stamp + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function restoreData(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      const restored = Array.isArray(parsed) ? parsed : parsed.items;
+      if(!Array.isArray(restored)) throw new Error("invalid");
+      if(!confirm("現在のリストを、このバックアップの内容で置き換えますか？")) return;
+      items = restored;
+      save();
+      active = "すべて";
+      render();
+      alert("バックアップを復元しました 🌱");
+    }catch(e){
+      alert("このファイルは読み込めませんでした。育て途中リストのバックアップJSONを選んでください。");
+    }
+  };
+  reader.readAsText(file);
+}
 function renderFilters(){
   $("#filters").innerHTML = statuses.map(s => `<button class="chip ${s===active?"active":""}" data-status="${esc(s)}">${esc(s)}</button>`).join("");
   document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{active=b.dataset.status; render();});
@@ -325,6 +377,12 @@ $("#cancelBtn").onclick=closeEditor;
 $("#editor").addEventListener("click",(e)=>{ if(e.target===$("#editor")) closeEditor(); });
 $("#search").oninput=render;
 $("#sort").onchange=render;
+$("#backupBtn").onclick=backupData;
+$("#restoreBtn").onclick=()=>$("#restoreInput").click();
+$("#restoreInput").onchange=(e)=>{
+  restoreData(e.target.files && e.target.files[0]);
+  e.target.value="";
+};
 
 $("#form").onsubmit=(e)=>{
   e.preventDefault();
